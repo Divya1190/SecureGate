@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { SessionProvider } from "@/components/SessionProvider";
+import { validateEnv } from "@/lib/env";
 import "./globals.css";
+
+validateEnv();
 
 export const metadata: Metadata = {
   title: "SecureGate — Authentication System",

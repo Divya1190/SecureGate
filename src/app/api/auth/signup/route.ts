@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signUpSchema } from "@/lib/validations";
+import { generateVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,19 +16,19 @@ export async function POST(request: NextRequest) {
 
     const { email, password, name } = result.data;
 
-    // Check for existing user — but do NOT reveal if the email exists (S4)
+    // S4 - Anti-enumeration: Check for existing user silently
     const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
-      // Return identical success response to prevent email enumeration
       return NextResponse.json(
         { message: "If this email is new, a verification link has been sent." },
         { status: 200 }
       );
     }
 
-    // Hash password with 12 salt rounds (S1)
+    // S1 - Hash password with 12 salt rounds
     const passwordHash = await bcrypt.hash(password, 12);
 
+    // Create user in inactive/unverified state
     await db.user.create({
       data: {
         email,
@@ -36,7 +38,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO (Phase 3): generate verification token & send email via Resend
+    // Generate secure verification token
+    const tokenRecord = await generateVerificationToken(email);
+
+    // Send email via Resend (failures are caught and logged inside sendVerificationEmail)
+    await sendVerificationEmail(email, name ?? null, tokenRecord.token);
 
     return NextResponse.json(
       { message: "If this email is new, a verification link has been sent." },
