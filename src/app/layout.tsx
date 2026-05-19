@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { SessionProvider } from "@/components/SessionProvider";
-import { validateEnv } from "@/lib/env";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -11,7 +10,6 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  validateEnv();
   return (
     <html lang="en">
       <body>
