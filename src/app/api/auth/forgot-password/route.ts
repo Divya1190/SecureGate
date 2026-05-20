@@ -41,9 +41,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: GENERIC_MESSAGE }, { status: 200 });
   } catch (error) {
     console.error("[FORGOT_PASSWORD_ERROR]", error);
-    return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 }
-    );
+    const body: { error: string; debug?: string } = {
+      error: "Something went wrong. Please try again.",
+    };
+    if (process.env.NODE_ENV !== "production") {
+      body.debug = error instanceof Error ? error.message : String(error);
+    }
+    return NextResponse.json(body, { status: 500 });
   }
 }
